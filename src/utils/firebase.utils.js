@@ -1,11 +1,13 @@
 import {initializeApp} from 'firebase/app';
-import {getAuth, signInWithRedirect, signInWithPopup, GoogleAuthProvider} from 'firebase/auth';
+import {getAuth, signInWithRedirect, signInWithPopup, signInWithEmailAndPassword, GoogleAuthProvider, createUserWithEmailAndPassword} from 'firebase/auth';
 import {
     getFirestore,
     doc,
     getDoc, 
     setDoc
 } from 'firebase/firestore';
+import { useEffect } from 'react';
+import {getRedirectResult} from 'firebase/auth'
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -26,11 +28,13 @@ provider.setCustomParameters({
 
 export const auth = getAuth();  
 export const signInWithGooglePopup = () => signInWithPopup(auth, provider);
+export const signInWithGoogleRedirect = () => signInWithRedirect(auth, provider);
 
 //database
 const db = getFirestore();
 
-export const createUserDocumentFromAuth = async (userAuth) => {
+export const createUserDocumentFromAuth = async (userAuth, additionInformation={}) => {
+    if(!userAuth) return;
     //users: user collection
     const userDocRef = doc(db, 'users', userAuth.uid);
     console.log(userDocRef);
@@ -46,7 +50,8 @@ export const createUserDocumentFromAuth = async (userAuth) => {
             await setDoc(userDocRef, {
                 displayName, 
                 email, 
-                createdAt
+                createdAt,
+                ... additionInformation
             });
         } catch(err) {
             console.log('error in creating user', err.message);
@@ -56,3 +61,16 @@ export const createUserDocumentFromAuth = async (userAuth) => {
     return userDocRef;
 }
 
+export const createAuthUserWithEmailAndPassword = async (email, password) => {
+    if(!email || !password){
+        return;
+    }
+    return await createUserWithEmailAndPassword(auth, email, password);
+}
+
+export const signInAuthUserWithEmailAndPassword = async (email, password) => {
+    if(!email || !password){
+        return;
+    }
+    return await signInWithEmailAndPassword(auth, email, password);
+}
